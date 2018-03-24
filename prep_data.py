@@ -1,36 +1,30 @@
 import numpy as np
 import numpy.matlib
 import pandas as pd
-import pickle
 import os
 import h5py
 
 from keras.utils import to_categorical
 from sklearn import preprocessing
 
-num_class = 11
-height, width, depth = 40, 15, 3
+num_class = 39
 
-h = height
+h = 40 # number of filter banks
 ws = 15 # window size
 w = int((ws-1)/2) # mid window
 
 method = 1 # zero for 2D conv / one for 1D conv
 
-#path_train = 'C:/Users/sabadi15/Desktop/ELEC/Project/cnn_train'
-#path_test = 'C:/Users/sabadi15/Desktop/ELEC/Project/cnn_test'
-path_train = '/home/sasan/my_files/cnn_train'
-path_test = '/home/sasan/my_files/cnn_test'
+path_train = '--path to raw train data'
 
 def create_data(cnn_data,path):
-    X_train = []
-    Y_train = []
+    X_train = [] # filter bank features
+    Y_train = [] # class labels
     for csvfile in cnn_data:
         data = pd.read_csv(os.path.join(path, csvfile),header=None)
         X_train.extend(data.iloc[:, 0:-1].values)
         Y_train.extend(data.iloc[:, -1].values)
     return np.array(X_train), np.array(Y_train)
-
 
 train_data = os.listdir(path_train)
 
@@ -38,7 +32,6 @@ X_train, Y_train = create_data(train_data,path_train)
 
 # padding data
 X_train = np.vstack((np.matlib.repmat(X_train[0,:],w,1),X_train,np.matlib.repmat(X_train[-1,:],w,1)))
-
 Y_train = np.hstack((np.matlib.repmat(Y_train[0],1,w),Y_train[None,:],np.matlib.repmat(Y_train[-1],1,w)))
 
 # standardizing data --- zero mean/ unit variance
@@ -60,7 +53,7 @@ if method==0:
         tmp[:,:,1] = X_train[h:2*h,i-w:i+w+1].copy()
         tmp[:,:,2] = X_train[2*h:3*h,i-w:i+w+1].copy()
 
-        if Y_train[0,i] != 11:
+        if Y_train[0,i] != 39: # discarding classes with label 'q'
             Xtrn.append(tmp)
             Ytrn.append(Y_train[0, i])
 
@@ -73,8 +66,8 @@ elif method==1:
             tmp[:,:,c+1] = X_train[h:2*h,i+j:i+j+1].copy()
             tmp[:,:,c+2] = X_train[2*h:3*h,i+j:i+j+1].copy()
             c +=3
-            #d = np.dstack((tmp[:,:,0],tmp[:,:,1],tmp[:,:,2]))
-        if Y_train[0,i] != 11:
+            
+        if Y_train[0,i] != 39: # discarding classes with label 'q'
             Xtrn.append(tmp)
             Ytrn.append(Y_train[0,i])
 
@@ -87,6 +80,7 @@ Ytrn = to_categorical(Ytrn,num_classes=num_class)
 print(np.shape(Xtrn))
 print(np.shape(Ytrn))
 
+# save dataset to hdf file 
 hf = h5py.File('train_data.h5', 'w')
 hf.create_dataset('train_data', data=Xtrn)
 hf.close()
