@@ -9,6 +9,7 @@ from keras.models import model_from_json
 from keras.callbacks import EarlyStopping
 from keras  import optimizers
 
+e = 0
 num_class = 39
 height, width, depth = 40, 1, 45
 INPUT_SHAPE = (height,width,depth)
@@ -20,9 +21,6 @@ def get_model_cnn():
 
     model.add(Conv2D(300,kernel_size=(5,1),padding='same',activation='sigmoid'))
     model.add(MaxPool2D(pool_size=(2,1),strides=(2,1)))
-
-    #model.add(Conv2D(512,kernel_size=(3,1),padding='valid',activation='sigmoid'))
-    #model.add(MaxPool2D(pool_size=(2,2),strides=(2,2)))
 
     model.add(Flatten())
     model.add(Dense(1024,activation='sigmoid'))
@@ -51,12 +49,13 @@ print(np.shape(Y_test))
 
 print('test data loaded from disk')
 
+# load train data
 
-hf = h5py.File('train_data_poa.h5', 'r')
+hf = h5py.File('train_data.h5', 'r')
 X_train = hf['train_data'][:]
 hf.close()
 
-hf = h5py.File('train_label_poa.h5', 'r')
+hf = h5py.File('train_label.h5', 'r')
 Y_train = hf['train_label'][:]
 hf.close()
 
